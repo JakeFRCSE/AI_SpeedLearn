@@ -581,7 +581,15 @@ print(tokenizer2.tokenize(text))
 
 """##2-6.Integer Encoding
 
+Computers can calculate numbers better than characters.
+
+So in this part, we are going to map tokenized words to integers for the better computing.
+
 ###1)Integer Encoding
+
+We can assign a number based on the word's frequency rank in the corpus.
+
+Here's an example.
 """
 
 from nltk.tokenize import sent_tokenize
@@ -617,12 +625,21 @@ for sentence in sentences:
   preprocessed_sentences.append(result)
 print(preprocessed_sentences)
 
+"""Tokenization, cleaning, normalization and counting.
+
+For counting, you can view the importance of normalization.
+"""
+
 print("Word set :", vocab)
 
 print(vocab["barber"])
 
+"""And you can sort the dictionary in descending order."""
+
 vocab_sorted = sorted(vocab.items(), key = lambda x : x[1], reverse = True)
 print(vocab_sorted)
+
+"""Assigning numebrs by order."""
 
 word_to_index = {}
 i = 0
@@ -632,6 +649,8 @@ for (word, frequency) in vocab_sorted:
     word_to_index[word] = i
 print(word_to_index)
 
+"""You can choose how many tokens you are going to use by the frequency ranking."""
+
 vocab_size = 5
 
 words_frequency = [word for word, index in word_to_index.items() if index >= vocab_size + 1]
@@ -640,8 +659,12 @@ for w in words_frequency:
   del word_to_index[w]
 print(word_to_index)
 
+"""If you decide the rank, the problem now is that there must be some tokens that are out of vocabulary; we call them OOV."""
+
 word_to_index['OOV'] = len(word_to_index) + 1
 print(word_to_index)
+
+"""So the following cell shows how to treat OOV; it assigned them a new number."""
 
 encoded_sentences = []
 for sentence in preprocessed_sentences:
@@ -654,7 +677,12 @@ for sentence in preprocessed_sentences:
   encoded_sentences.append(encoded_sentence)
 print(encoded_sentences)
 
-"""###2)Using Counter"""
+"""###2)Using Counter
+
+Actually, we have simpler method.
+
+Let's check it out!
+"""
 
 from collections import Counter
 
@@ -673,6 +701,8 @@ vocab_size = 5
 vocab = vocab.most_common(vocab_size)
 vocab
 
+"""As you see, Counter method automatically counts the number of same tokens."""
+
 word_to_index = {}
 i = 0
 for (word, frequency) in vocab:
@@ -680,7 +710,10 @@ for (word, frequency) in vocab:
   word_to_index[word] = i
 print(word_to_index)
 
-"""###3)Using FreqDist of NLTK"""
+"""###3)Using FreqDist of NLTK
+
+And just like Counter, we have another method.
+"""
 
 from nltk import FreqDist
 import numpy as np
@@ -696,11 +729,21 @@ print(vocab)
 word_to_index = {word[0] : index + 1 for index, word in enumerate(vocab)}
 print(word_to_index)
 
+"""**Understanding enumerate**
+
+Just like the cell above, we can use enumerate.
+
+It returns input's value and its key.
+"""
+
 test_input = ['a', 'b', 'c', 'd', 'e']
 for index, value in enumerate(test_input):
   print("value : {}, index : {}".format(value, index))
 
-"""###Text preprocessing with Keras"""
+"""###Text preprocessing with Keras
+
+A whole workflow so far with keras
+"""
 
 from tensorflow.keras.preprocessing.text import Tokenizer
 
@@ -729,6 +772,11 @@ print(tokenizer.texts_to_sequences(preprocessed_sentences))
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(preprocessed_sentences)
 
+"""Here's another example of the whole precess so far.
+
+This example is different because it assigns 1 on OOV.
+"""
+
 vocab_size = 5
 words_frequency = [word for word, index in tokenizer.word_index.items() if index >= vocab_size + 1]
 
@@ -749,6 +797,12 @@ print('Number of OOV\'s index : {}'.format(tokenizer.word_index['OOV']))
 print(tokenizer.texts_to_sequences(preprocessed_sentences))
 
 """##2-7.Padding
+
+After tokenization, if the length of the sentence or the passage,
+
+ you can switch the tokens into vectors comprised of numbers
+
+ so that you can improve the speed of calculation.
 
 ###1.Padding with Numpy
 """
@@ -772,9 +826,10 @@ for sentence in encoded:
 padded_np = np.array(encoded)
 padded_np
 
+"""As you see, we appended 0s after all the existing elements.
 
-
-"""###2.Padding with Keras preprocessing"""
+###2.Padding with Keras preprocessing
+"""
 
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
@@ -784,16 +839,24 @@ print(encoded)
 padded = pad_sequences(encoded)
 padded
 
+"""However, in Keras, you can put 0s before the existing elements."""
+
 padded = pad_sequences(encoded, padding = 'post')
 padded
 
+"""Of course you can put 0s after them."""
+
 (padded == padded_np).all()
+
+"""And with Keras, you can set the maximum length."""
 
 padded = pad_sequences(encoded, padding = 'post', maxlen = 5)
 padded
 
 padded = pad_sequences(encoded, padding = 'post', truncating = 'post', maxlen = 5)
 padded
+
+"""We can set the dummy number as whatever we want instead of 0."""
 
 last_value = len(tokenizer.word_index) + 1
 print(last_value)
@@ -802,6 +865,16 @@ padded = pad_sequences(encoded, padding = 'post', value = last_value)
 padded
 
 """##2-8.One-Hot Encoding
+
+One-Hot Encoding is a good way to improve your computer's calculation speed.
+
+In One-Hot Encoding, each column represents a certain token.
+
+And each row has the only one 1 value which represents which token the row was.
+
+But it has side effect in which we need more memory.
+
+Let's look into the following example.
 
 ###with konlpy
 """
@@ -814,6 +887,8 @@ print(tokens)
 
 word_to_index = {word : index for index, word in enumerate(tokens)}
 print("Word set :", word_to_index)
+
+"""Here, we define a function and put the only 1 in the row."""
 
 def one_hot_encoding(word, word_to_index):
   one_hot_vector = [0] * (len(word_to_index))
@@ -840,16 +915,34 @@ sub_text = "점심 먹으러 갈래 메뉴는 햄버거 최고야"
 encoded = tokenizer.texts_to_sequences([sub_text])[0]
 print(encoded)
 
+"""Keras is rather simpler than the previous way."""
+
 one_hot = to_categorical(encoded)
 print(one_hot)
 
-"""##2-9.Splitting Data"""
+"""##2-9.Splitting Data
+
+To improve your model's accuracy, you will need to split your data set.
+
+It's called splitting.
+
+Normally, when we are splitting data set, we split it into 3 sets.
+
+Train set, validation set, test set.
+
+You train your model with train set and use the validation set to prevent your model from overfitting.
+
+For the last step, you will use test set to evaluate your model.
+"""
 
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-"""###1.Splitting into X and y from the original data"""
+"""###1.Splitting into X and y from the original data
+
+Zip function
+"""
 
 #with zip function
 X, y = zip(['a', 1], ['b', 2], ['c', 3])
@@ -860,6 +953,8 @@ sequences = [['a', 1], ['b', 2], ['c', 3]]
 X, y = zip(*sequences)
 print("X data :", X)
 print("y data :", y)
+
+"""With DataFrame"""
 
 #with DataFrame
 
@@ -878,6 +973,8 @@ y = df['스팸 메일 유무']
 print("X data :", X.to_list())
 print("y data :", y.to_list())
 
+"""With Numpy"""
+
 #with Numpy
 np_array = np.arange(0, 16).reshape((4, 4))
 print("Whole data :")
@@ -890,7 +987,10 @@ print("X data :")
 print(X)
 print("y data :", y)
 
-"""###2.Extracting test data"""
+"""###2.Extracting test data
+
+With sklearn
+"""
 
 #with scikit-learn
 
@@ -903,6 +1003,8 @@ print(X)
 print("Whole y data :")
 print(list(y))
 
+"""All you need to do is using the train_test_split function."""
+
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 1234)
 
 print("X train data :")
@@ -914,6 +1016,8 @@ print("y train data :")
 print(y_train)
 print("y test data :")
 print(y_test)
+
+"""You can set different random_state value."""
 
 #different value for random_state
 
@@ -932,6 +1036,8 @@ print(y_train)
 print('y 테스트 데이터 :')
 print(y_test)
 
+"""You can also manually split your data."""
+
 #manual extracting from here
 X, y = np.arange(0, 24).reshape((12, 2)), range(12)
 
@@ -939,6 +1045,15 @@ print("Whole X data :")
 print(X)
 print("Whole y data :")
 print(list(y))
+
+"""\*Warning!
+
+you should substract the number for train set length from the whole length
+
+If you set the number of test set length by multiplying 0.2, there must be an omission
+
+because in python it will automatically switch floating point number to the integer type
+"""
 
 num_of_train = int(len(X) * 0.8)
 num_of_test = int(len(X) - num_of_train)
@@ -958,6 +1073,8 @@ print(list(y_test))
 """##2-10.Text Preprocessing Tools for Korean Text
 
 ###1.PyKoSpacing
+
+This package is for correcting inappropriately spaced sentences.
 """
 
 pip install git+https://github.com/haven-jeon/PyKoSpacing.git
@@ -978,6 +1095,8 @@ print(kospacing_sent)
 
 *   Skip running the following cells
 *   Because currently Py-hanspell doesn't work. (03/03/2024)
+
+This one is for grammar check and spacing.
 
 
 
@@ -1000,7 +1119,14 @@ print(kospacing_sent)
 #print(hanspell_sent)
 #print(kospacing_sent)
 
-"""###3.Tokenization with SOYNLP"""
+"""###3.Tokenization with SOYNLP
+
+This package is based on unsupervised learning.
+
+Since it's based on the unsupervised learning, it is very flexible for new words.
+
+But you need to train the model of it first.
+"""
 
 pip install soynlp
 
@@ -1029,6 +1155,13 @@ word_extractor = WordExtractor()
 word_extractor.train(corpus)
 word_score_table = word_extractor.extract()
 
+"""SOYNLP is based on cohesion probability.
+
+Cohesion probability shows the probability of the next character based on the previous substring.
+
+This is specifically useful to distinguish a new korean word.
+"""
+
 word_score_table["반포한"].cohesion_forward
 
 word_score_table["반포한강"].cohesion_forward
@@ -1039,6 +1172,17 @@ word_score_table["반포한강공원"].cohesion_forward
 
 word_score_table["반포한강공원에"].cohesion_forward
 
+"""SOYNLP is also based on branching entropy.
+
+Branching entropy is uncertainty of the next character.
+
+If I spell B, you never know what is the word I'm thinking of.
+
+Now, I spell Bana, then you will see I'm thinking of Banana.
+
+This is what branching enptropy is like.
+"""
+
 word_score_table["디스"].right_branching_entropy
 
 word_score_table["디스플"].right_branching_entropy
@@ -1047,18 +1191,30 @@ word_score_table["디스플레"].right_branching_entropy
 
 word_score_table["디스플레이"].right_branching_entropy
 
+"""Since Korean is agglutinative language, SOYNLP's LTokenizer is very useful.
+
+It can seperate a word into left one(stem) and right one(affix) based on the score.
+"""
+
 from soynlp.tokenizer import LTokenizer
 
 scores = {word : score.cohesion_forward for word, score in word_score_table.items()}
 l_tokenizer = LTokenizer(scores = scores)
 l_tokenizer.tokenize("국제사회와 우리의 노력들로 범죄를 척결하자", flatten = False)
 
+"""It can also make a space between words that are sticked together."""
+
 from soynlp.tokenizer import MaxScoreTokenizer
 
 maxscore_tokenizer = MaxScoreTokenizer(scores = scores)
 maxscore_tokenizer.tokenize("국제사회와 우리의 노력들로 범죄를 척결하자")
 
-"""###4.Cleaning repetitive letters with SOYNLP"""
+"""###4.Cleaning repetitive letters with SOYNLP
+
+This is as you see!
+
+You can even do the cleaning with SOYNLP!
+"""
 
 from soynlp.normalizer import *
 
@@ -1071,7 +1227,10 @@ print(repeat_normalize('와하하하하하하하하하핫', num_repeats=2))
 print(repeat_normalize('와하하하하하하하핫', num_repeats=2))
 print(repeat_normalize('와하하하하하핫', num_repeats=2))
 
-"""###5.Customized KoNLPy"""
+"""###5.Customized KoNLPy
+
+You can also make your own rules for morphology!
+"""
 
 pip install customized_konlpy
 
