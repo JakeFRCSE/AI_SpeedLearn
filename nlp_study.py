@@ -1242,4 +1242,168 @@ twitter.add_dictionary('은경이', 'Noun')
 
 twitter.morphs('은경이는 사무실로 갔습니다.')
 
-"""#3.Language Model"""
+"""#3.Language Model
+
+##4. Count based word Representation
+
+###4-2. Bag of Words
+"""
+
+from konlpy.tag import Okt
+
+okt = Okt()
+
+def build_bag_of_words(document):
+  document = document.replace('.', '')
+  tokenized_document = okt.morphs(document)
+
+  word_to_index = {}
+  bow = []
+
+  for word in tokenized_document:
+    if word not in word_to_index.keys():
+      word_to_index[word] = len(word_to_index)
+      bow.insert(len(word_to_index) - 1, 1)
+    else:
+      index = word_to_index.get(word)
+      bow[index] = bow[index] + 1
+
+  return word_to_index, bow
+
+doc1 = "정부가 발표하는 물가상승률과 소비자가 느끼는 물가상승률은 다르다."
+vocab, bow = build_bag_of_words(doc1)
+print("Vocabulary :", vocab)
+print("Bag of words vector :", bow)
+
+doc2 = '소비자는 주로 소비하는 상품을 기준으로 물가상승률을 느낀다.'
+
+vocab, bow = build_bag_of_words(doc2)
+print("Vocabulary :", vocab)
+print("Bag of words vector :", bow)
+
+doc3 = doc1 + ' ' + doc2
+vocab, bow = build_bag_of_words(doc3)
+print("Vocabulary :", vocab)
+print("Bag of words vector :", bow)
+
+"""Making BoW with CountVectorizer"""
+
+from sklearn.feature_extraction.text import CountVectorizer
+
+corpus = ['you know I want your love. because I love you.']
+vector = CountVectorizer()
+
+print("Bag of words vector :", vector.fit_transform(corpus).toarray())
+
+print("Vocabulary :", vector.vocabulary_)
+
+from sklearn.feature_extraction.text import CountVectorizer
+from nltk.corpus import stopwords
+
+text = ["Family is not an important thing. It's everything."]
+vect = CountVectorizer(stop_words = ["the", "a", "an", "is", "not"])
+print("Bag of words vector :", vect.fit_transform(text).toarray())
+print("Vocabulary :", vect.vocabulary_)
+
+text = ["Family is not an important thing. It's everything."]
+vect = CountVectorizer(stop_words = "english")
+print("Bag of words vector :", vect.fit_transform(text).toarray())
+print("Vocabulary :", vect.vocabulary_)
+
+nltk.download('stopwords')
+text = ["Family is not an important thing. It's everything."]
+stop_words = stopwords.words("english")
+vect = CountVectorizer(stop_words = stop_words)
+print("Bag of words vector :", vect.fit_transform(text).toarray())
+print("Vocabulary :", vect.vocabulary_)
+
+"""##4-4. TF-IDF(Term Frequency-Inverse Document Frequency)
+
+Implementation with Python
+"""
+
+import pandas as pd
+from math import log
+
+docs = [
+  '먹고 싶은 사과',
+  '먹고 싶은 바나나',
+  '길고 노란 바나나 바나나',
+  '저는 과일이 좋아요'
+]
+vocab = list(set(w for doc in docs for w in doc.split()))
+vocab.sort()
+
+N = len(docs)
+
+def tf(t, d):
+  return d.count(t)
+
+def idf(t):
+  df = 0
+  for doc in docs:
+    df += t in doc
+  return log(N / (df + 1))
+
+def tfidf(t, d):
+  return tf(t, d)* idf(t)
+
+result = []
+
+for i in range(N):
+  result.append([])
+  d = docs[i]
+  for j in range(len(vocab)):
+    t = vocab[j]
+    result[-1].append(tf(t, d))
+
+tf_ = pd.DataFrame(result, columns = vocab)
+tf_
+
+result = []
+for j in range(len(vocab)):
+  t = vocab[j]
+  result.append(idf(t))
+
+idf_ = pd.DataFrame(result, index = vocab, columns = ["IDF"])
+idf_
+
+result = []
+for i in range(N):
+  result.append([])
+  d = docs[i]
+  for j in range(len(vocab)):
+    t = vocab[j]
+    result[-1].append(tfidf(t, d))
+
+tfdif_ = pd.DataFrame(result, columns = vocab)
+tfdif_
+
+"""Implementation with sklearn"""
+
+from sklearn.feature_extraction.text import CountVectorizer
+
+corpus = [
+    'you know I want your love',
+    'I like you',
+    'what should I do ',
+]
+
+vector = CountVectorizer()
+
+print(vector.fit_transform(corpus).toarray())
+
+print(vector.vocabulary_)
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+corpus = [
+    'you know I want your love',
+    'I like you',
+    'what should I do ',
+]
+
+tfidfv = TfidfVectorizer().fit(corpus)
+print(tfidfv.transform(corpus).toarray())
+print(tfidfv.vocabulary_)
+
