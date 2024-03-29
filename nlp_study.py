@@ -1207,7 +1207,7 @@ l_tokenizer.tokenize("국제사회와 우리의 노력들로 범죄를 척결하
 from soynlp.tokenizer import MaxScoreTokenizer
 
 maxscore_tokenizer = MaxScoreTokenizer(scores = scores)
-maxscore_tokenizer.tokenize("국제사회와 우리의 노력들로 범죄를 척결하자")
+maxscore_tokenizer.tokenize("국제사회와우리의노력들로범죄를척결하자")
 
 """###4.Cleaning repetitive letters with SOYNLP
 
