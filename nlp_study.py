@@ -718,7 +718,7 @@ And just like Counter, we have another method.
 from nltk import FreqDist
 import numpy as np
 
-vocab = FreqDist(np.hstack(preprocessed_sentences))
+vocab = FcreqDist(np.hstack(preprocessed_sentenes))
 
 print(vocab["barber"])
 
@@ -1244,9 +1244,9 @@ twitter.morphs('은경이는 사무실로 갔습니다.')
 
 """#3.Language Model
 
-##4. Count based word Representation
+#4. Count based word Representation
 
-###4-2. Bag of Words
+##4-2. Bag of Words
 """
 
 from konlpy.tag import Okt
@@ -1406,4 +1406,96 @@ corpus = [
 tfidfv = TfidfVectorizer().fit(corpus)
 print(tfidfv.transform(corpus).toarray())
 print(tfidfv.vocabulary_)
+
+"""#5. Vector Similarity
+
+##5-1. Cosine similarity
+"""
+
+import numpy as np
+from numpy import dot
+from numpy.linalg import norm
+
+def cos_sim(A, B):
+  return dot(A, B) / (norm(A) * norm(B))
+
+doc1 = np.array([0, 1, 1, 1])
+doc2 = np.array([1, 0, 1, 1])
+doc3 = np.array([2, 0, 2, 2])
+
+print('문서 1과 문서2의 유사도 :{:.2f}'.format(cos_sim(doc1, doc2)))
+print('문서 1과 문서3의 유사도 :{:.2f}'.format(cos_sim(doc1, doc3)))
+print('문서 2와 문서3의 유사도 :{:.2f}'.format(cos_sim(doc2, doc3)))
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+data = pd.read_csv('movies_metadata.csv', low_memory = False, error_bad_lines=False)
+data.head(2)
+
+data = data.head(20000)
+
+print('Overview 열의 결측값의 수: ', data['overview'].isnull().sum())
+
+data['overview'] = data['overview'].fillna(' ')
+
+print('Overview 열의 결측값의 수: ', data['overview'].isnull().sum())
+
+tfidf = TfidfVectorizer(stop_words = 'english')
+tfidf_matrix = tfidf.fit_transform(data['overview'])
+print('TF-IDF 행렬의 크기(shape) :', tfidf_matrix.shape)
+
+cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+print('코사인 유사도 연산 결과 :', cosine_sim.shape)
+
+title_to_index = dict(zip(data['title'], data.index))
+
+idx = title_to_index['Father of the Bride Part II']
+print(idx)
+
+def get_recommendations(title, cosine_sim = cosine_sim):
+  idx = title_to_index[title]
+  sim_scores = list(enumerate(cosine_sim[idx]))
+  sim_scores = sorted(sim_scores, key = lambda x : x[1], reverse = True)
+  sim_scores = sim_scores[1 : 11]
+  movie_indices = [idx[0] for idx in sim_scores]
+  return data['title'].iloc[movie_indices]
+
+get_recommendations('The Dark Knight Rises')
+
+"""##5-2 Other methods for similarity"""
+
+import numpy as np
+
+def dist(x, y):
+  return np.sqrt(np.sum((x - y) ** 2))
+
+doc1 = np.array((2, 3, 0, 1))
+doc2 = np.array((1, 2, 3, 1))
+doc3 = np.array((2, 1, 2, 2))
+docQ = np.array((1, 1, 0, 1))
+
+print('문서1과 문서Q의 거리 :', dist(doc1, docQ))
+print('문서2와 문서Q의 거리 :', dist(doc2, docQ))
+print('문서3과 문서Q의 거리 :', dist(doc3, docQ))
+
+doc1 = "apple banana everyone like likey watch card holder"
+doc2 = "apple banana coupon passport love you"
+
+tokenized_doc1 = doc1.split()
+tokenized_doc2 = doc2.split()
+
+print('문서1 :', tokenized_doc1)
+print('문서2 :', tokenized_doc2)
+
+union = set(tokenized_doc1).union(set(tokenized_doc2))
+print('문서1과 문서2의 합집합 :', union)
+
+intersection = set(tokenized_doc1).intersection(set(tokenized_doc2))
+print('문서1과 문서2의 교집합 :', intersection)
+
+print('자카드 유사도 :', len(intersection) / len(union))
+
+"""#6. Machine Learning Outline"""
 
