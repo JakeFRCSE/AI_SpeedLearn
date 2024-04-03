@@ -1497,5 +1497,304 @@ print('문서1과 문서2의 교집합 :', intersection)
 
 print('자카드 유사도 :', len(intersection) / len(union))
 
-"""#6. Machine Learning Outline"""
+"""#6. Machine Learning Outline
+
+##6-4. Practice of auto differential and linear regression
+
+###1.Auto differential
+"""
+
+import tensorflow as tf
+
+w = tf.Variable(2.)
+
+def f(w):
+  y = w**2
+  z = 2*y + 5
+  return z
+
+with tf.GradientTape() as tape:
+  z = f(w)
+
+gradients = tape.gradient(z, [w])
+print(gradients)
+
+"""###2.Linear regression implementation with auto differential"""
+
+w = tf.Variable(4.0)
+b = tf.Variable(1.0)
+
+@tf.function
+def hypothesis(x):
+  return w*x + b
+
+x_test = [3.5, 5, 5.5, 6]
+print(hypothesis(x_test).numpy())
+
+@tf.function
+def mse_loss(y_pred, y):
+  return tf.reduce_mean(tf.square(y_pred - y))
+
+x = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+y = [11, 22, 33, 44, 53, 66, 77, 87, 95]
+
+optimizer = tf.optimizers.SGD(0.01)
+
+for i in range(301):
+  with tf.GradientTape() as tape:
+    y_pred = hypothesis(x)
+    cost = mse_loss(y_pred, y)
+  gradients = tape.gradient(cost, [w, b])
+  optimizer.apply_gradients(zip(gradients, [w, b]))
+  if i % 10 == 0:
+    print("epoch : {:3} | w value : {:5.4f} | b value : {:5.4} | cost : {:5.6f}".format(i, w.numpy(), b.numpy(), cost))
+
+x_test = [3.5, 5, 5.5, 6]
+print(hypothesis(x_test).numpy())
+
+"""###3.Linear regression implementation with Keras"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras import optimizers
+
+x = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+y = [11, 22, 33, 44, 53, 66, 77, 87, 95]
+
+model = Sequential()
+model.add(Dense(1, input_dim = 1, activation = 'linear'))
+sgd = optimizers.SGD(lr = 0.01)
+model.compile(optimizer = sgd, loss = 'mse', metrics = ['mse'])
+model.fit(x, y, epochs = 300)
+
+plt.plot(x, model.predict(x), 'b', x, y, 'k.')
+
+print(model.predict([9.5]))
+
+"""##6-5. Logistic Regression
+
+sigmoid function
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+def sigmoid(x):
+  return 1 / (1 + np.exp(-x))
+
+x = np.arange(-5.0, 5.0, 0.1)
+y = sigmoid(x)
+
+plt.plot(x, y, 'g')
+plt.plot([0, 0], [1.0, 0.0], ':')
+plt.title('Sigmoid Function')
+plt.show()
+
+def sigmoid(x):
+  return 1 / (1 + np.exp(-x))
+
+x = np.arange(-5.0, 5.0, 0.1)
+y1 = sigmoid(0.5 * x)
+y2 = sigmoid(x)
+y3 = sigmoid(2 * x)
+
+plt.plot(x, y1, 'r', linestyle = '--')
+plt.plot(x, y2, 'g')
+plt.plot(x, y3, 'b', linestyle = '--')
+plt.plot([0, 0], [1.0, 0.0], ':')
+plt.title('Sigmoid Function')
+plt.show()
+
+def sigmoid(x):
+  return 1 / (1 + np.exp(-x))
+
+x = np.arange(-5.0, 5.0, 0.1)
+y1 = sigmoid(x + 0.5)
+y2 = sigmoid(x + 1)
+y3 = sigmoid(x + 1.5)
+
+plt.plot(x, y1, 'r', linestyle = '--')
+plt.plot(x, y2, 'g')
+plt.plot(x, y3, 'b', linestyle = '--')
+plt.plot([0 , 0], [1.0, 0.0], ':')
+plt.title('Sigmoid Function')
+plt.show()
+
+"""##6-6. Logistic Regression Practice"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras import optimizers
+
+x = np.array([-50, -40, -30, -20, -10, -5, 0, 5, 10, 20, 30, 40, 50])
+y = np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
+
+model = Sequential()
+model.add(Dense(1, input_dim = 1, activation = 'sigmoid'))
+
+sgd = optimizers.SGD(learning_rate = 0.01)
+model.compile(optimizer = sgd, loss = 'binary_crossentropy', metrics = ['binary_accuracy'])
+
+model.fit(x, y, epochs = 200)
+
+plt.plot(x, model.predict(x), 'b', x, y, 'k.')
+
+print(model.predict([1, 2, 3, 4, 4.5]))
+print(model.predict([11, 21, 31, 41, 500]))
+
+"""##6-7. Multiple Input Practice
+
+###1. Linear Regression with multiple features
+"""
+
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras import optimizers
+
+X = np.array([[70,85,11], [71,89,18], [50,80,20], [99,20,10], [50,10,10]])
+y = np.array([73, 82 ,72, 57, 34])
+
+model = Sequential()
+model.add(Dense(1, input_dim = 3, activation = 'linear'))
+
+sgd = optimizers.SGD(learning_rate = 0.0001)
+model.compile(optimizer = sgd, loss = 'mse', metrics = ['mse'])
+model.fit(X, y, epochs = 2000)
+
+print(model.predict(X))
+
+X_test = np.array([[20,99,10], [40,50,20]])
+print(model.predict(X_test))
+
+"""###2. Logistic Regression with multiple features"""
+
+X = np.array([[0, 0], [0, 1], [1, 0], [0, 2], [1, 1], [2, 0]])
+y = np.array([0, 0, 0, 1, 1, 1])
+
+model = Sequential()
+model.add(Dense(1, input_dim = 2, activation = 'sigmoid'))
+model.compile(optimizer = 'sgd', loss = 'binary_crossentropy', metrics = ['binary_accuracy'])
+
+model.fit(X, y, epochs = 2000)
+
+print(model.predict(X))
+
+"""##6-8. Vector&Matrix&Tensor Calculation
+
+###Introduction to the concepts
+"""
+
+import numpy as np
+
+d = np.array(5)
+
+print('Dimension of Tensor :', d.ndim)
+print('Shape of Tensor :', d.shape)
+
+d = np.array([1, 2, 3, 4])
+
+print('Dimension of Tensor :', d.ndim)
+print('Shape of Tensor :', d.shape)
+
+d =  np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+
+print('Dimension of Tensor :', d.ndim)
+print('Shape of Tensor :', d.shape)
+
+d = np.array([
+            [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [10, 11, 12, 13, 14]],
+            [[15, 16, 17, 18, 19], [19, 20, 21, 22, 23], [23, 24, 25, 26, 27]]
+            ])
+
+print('Dimension of Tensor :', d.ndim)
+print('Shape of Tensor :', d.shape)
+
+"""###Calculation part"""
+
+import numpy as np
+
+A = np.array([8, 4, 5])
+B = np.array([1, 2, 3])
+print('Sum of the two vectors :', A + B)
+print('Difference of the two vectors :', A - B)
+
+A = np.array([[10, 20, 30, 40], [50, 60, 70, 80]])
+B = np.array([[5, 6, 7, 8],[1, 2, 3, 4]])
+print('Sum of the two vectors :\n', A + B)
+print('Difference of the two vectors :\n', A - B)
+
+A = np.array([1, 2, 3])
+B = np.array([4, 5, 6])
+print('Dot product of the two vectors :', np.dot(A, B))
+
+A = np.array([[1, 3], [2, 4]])
+B = np.array([[5, 7], [6, 8]])
+print('Multiplicaiton of the two matrices :')
+print(np.matmul(A, B))
+
+"""##6-10. SoftMax Practice"""
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import urllib.request
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.utils import to_categorical
+
+urllib.request.urlretrieve("https://raw.githubusercontent.com/ukairia777/tensorflow-nlp-tutorial/main/06.%20Machine%20Learning/dataset/Iris.csv", filename="Iris.csv")
+
+data = pd.read_csv('Iris.csv', encoding = 'latin1')
+
+print("No. of sample :", len(data))
+print(data[:5])
+
+print("Type of spices :", data["Species"].unique(), sep = "\n")
+
+sns.set(style = 'ticks', color_codes = True)
+g = sns.pairplot(data, hue = 'Species', palette = "husl")
+
+sns.barplot(x = 'Species', y = 'SepalWidthCm', data = data, errorbar = None, hue = 'Species')
+
+data['Species'].value_counts().plot(kind = 'bar')
+
+data['Species'] = data['Species'].replace(['Iris-virginica', 'Iris-setosa', 'Iris-versicolor'], [0, 1, 2])
+data['Species'].value_counts().plot(kind = 'bar')
+
+data_X = data[['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm']].values
+
+data_y = data['Species'].values
+
+print(data_X[:5])
+print(data_y[:5])
+
+X_train, X_test, y_train, y_test = train_test_split(data_X, data_y, train_size = 0.8, random_state = 1)
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+print(y_train[:5])
+print(y_test[:5])
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+model = Sequential()
+model.add(Dense(3, input_dim = 4, activation = 'softmax'))
+model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
+history = model.fit(X_train, y_train, epochs = 200, batch_size = 1, validation_data = (X_test, y_test))
+
+epochs = range(1, len(history.history['accuracy']) + 1)
+plt.plot(epochs, history.history['loss'])
+plt.plot(epochs, history.history['val_loss'])
+plt.title("model loss")
+plt.ylabel("loss")
+plt.xlabel("epoch")
+plt.legend(['train', 'val'], loc = 'upper left')
+plt.show()
+
+print("\ntest accuracy: %.4f" %(model.evaluate(X_test, y_test)[1]))
 
