@@ -1963,8 +1963,144 @@ model.add(Dense(3, activation = 'softmax'))
 
 """##7-4. The way deep learning works
 
-MAYDAY!! MAYDAY!!
+.
 
 ##7-5. Back Propagation
+"""
+
+
+
+"""##7-6. How to prevent overfitting"""
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dropout, Dense
+
+max_words = 10000
+num_classes = 46
+
+model = Sequential()
+model.add(Dense(256, input_shape = (max_words,), activation = 'relu'))
+model.add(Dropout(0.5))
+model.add(Dense(128, activation = 'relu'))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes, activation = 'softmax'))
+
+"""##7-7. Gradient Vanishing"""
+
+from tensorflow.keras import optimizers
+
+Adam = optimizers.Adam(learning_rate = 0.0001, clipnorm = 1.)
+
+"""##7-11. Text Classification with MLP"""
+
+import numpy as np
+from tensorflow.keras.preprocessing.text import Tokenizer
+
+texts = ['먹고 싶은 사과', '먹고 싶은 바나나', '길고 노란 바나나 바나나', '저는 과일이 좋아요']
+
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts(texts)
+print(tokenizer.word_index)
+
+print(tokenizer.texts_to_matrix(texts, mode = 'count'))
+
+print(tokenizer.texts_to_matrix(texts, mode = 'binary'))
+
+print(tokenizer.texts_to_matrix(texts, mode = 'tfidf').round(2))
+
+print(tokenizer.texts_to_matrix(texts, mode = 'freq').round(2))
+
+import pandas as pd
+from sklearn.datasets import fetch_20newsgroups
+import matplotlib.pyplot as plt
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.utils import to_categorical
+
+newsdata = fetch_20newsgroups(subset = 'train')
+
+print(newsdata.keys())
+
+print('훈련용 샘플의 개수 : {}'.format(len(newsdata.data)))
+
+print('총 주제의 개수 : {}'.format(len(newsdata.target_names)))
+print(newsdata.target_names)
+
+print('첫번째 샘플의 레이블 : {}'.format(newsdata.target[0]))
+
+print('7번 레이블이 의미하는 주제 : {}'.format(newsdata.target_names[7]))
+
+print(newsdata.data[0])
+
+data = pd.DataFrame(newsdata.data, columns = ['email'])
+data['target'] = pd.Series(newsdata.target)
+data[:5]
+
+data.info()
+
+data.isnull().values.any()
+
+print('중복을 제외한 샘플의 수 : {}'.format(data['email'].nunique()))
+print('중복을 제외한 주제의 수 : {}'.format(data['target'].nunique()))
+
+data['target'].value_counts().plot(kind = 'bar');
+
+print(data.groupby('target').size().reset_index(name = 'count'))
+
+newsdata_test = fetch_20newsgroups(subset = 'test', shuffle = True)
+train_email = data['email']
+train_label = data['target']
+test_email = newsdata_test.data
+test_label = newsdata_test.target
+
+vocab_size = 10000
+num_classes = 20
+
+def prepare_data(train_data, test_data, mode):
+  tokenizer = Tokenizer(num_words = vocab_size)
+  tokenizer.fit_on_texts(train_data)
+  X_train = tokenizer.texts_to_matrix(train_data, mode = mode)
+  X_test = tokenizer.texts_to_matrix(test_data, mode = mode)
+  return X_train, X_test, tokenizer.index_word
+
+X_train, X_test, index_to_word = prepare_data(train_email, test_email, 'binary')
+y_train = to_categorical(train_label, num_classes)
+y_test = to_categorical(test_label, num_classes)
+
+print('훈련 샘플 본문의 크기 : {}'.format(X_train.shape))
+print('훈련 샘플 레이블의 크기 : {}'.format(y_train.shape))
+print('테스트 샘플 본문의 크기 : {}'.format(X_test.shape))
+print('테스트 샘플 레이블의 크기 : {}'.format(y_test.shape))
+
+print('빈도수 상위 1번 단어 : {}'.format(index_to_word[1]))
+print('빈도수 상위 9999번 단어 : {}'.format(index_to_word[9999]))
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+
+def fit_and_evaluate(X_train, y_train, X_test, y_test):
+  model = Sequential()
+  model.add(Dense(256, input_shape = (vocab_size,), activation = 'relu'))
+  model.add(Dropout(0.5))
+  model.add(Dense(128, activation = 'relu'))
+  model.add(Dropout(0.5))
+  model.add(Dense(num_classes, activation = 'softmax'))
+
+  model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
+  model.fit(X_train, y_train, batch_size = 128, epochs = 5, verbose = 1, validation_split = 0.1)
+  score = model.evaluate(X_test, y_test, batch_size = 128, verbose = 0)
+  return score[1]
+
+modes = ['binary', 'count', 'tfidf', 'freq']
+
+for mode in modes:
+  X_train, X_test, _ = prepare_data(train_email, test_email, mode)
+  score = fit_and_evaluate(X_train, y_train, X_test, y_test)
+  print(mode+' 모드의 테스트 정확도:', score)
+
+"""##7-12. Neural Network Language Model, NNLM
+
+![images.jpeg](data:image/jpeg;base64,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)
+
+#8. Recurrent Neural Network
 """
 
