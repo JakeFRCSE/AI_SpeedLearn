@@ -24,6 +24,6 @@
 
 # 멤버
 - [손봉국]: 지도 멤버
-- [박준혁]
+- [박준혁] [JakeFRCSE](https://github.com/JakeFRCSE)
 - [윤대한] [daehan-86](https://github.com/daehan-86)
 - [조현성]
