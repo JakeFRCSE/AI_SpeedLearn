@@ -7,7 +7,7 @@
 
 매주 금요일 16시 대면 -> 목요일 17시 대면
 
-## 발표 내용
+## 공부한 내용
 |챕터|링크|
 |---|---|
 |01|[자연어 처리(natural language processing) 준비하기](https://wikidocs.net/21667)|
