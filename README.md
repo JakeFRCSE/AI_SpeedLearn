@@ -19,6 +19,7 @@
 |07|[딥 러닝(Deep Learning) 개요](https://wikidocs.net/22882)|
 |08|[순환 신경망(Recurrent Neural Network)](https://wikidocs.net/48558)|
 |09|[워드 임베딩(Word Embedding)](https://wikidocs.net/22644)|
+|실습|파이토치로 IMDB영화리뷰 긍정 부정 분류|
 
 
 
